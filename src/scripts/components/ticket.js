@@ -6,6 +6,7 @@ import markdown   from 'markdown';
 
 import gridify   from '../utils/gridify';
 import doubletap from '../utils/doubletap';
+import socket    from '../utils/socket';
 
 import Ticket       from '../models/ticket';
 import TicketAction from '../actions/ticket';
@@ -35,18 +36,19 @@ export default React.createClass({
 		return {
 			x: this.props.ticket.position.x,
 			y: this.props.ticket.position.y,
-			showEditDialog: false
+			showEditDialog: false,
+			locked: false
 		}
 	},
 
 	shouldComponentUpdate(nextProps, nextState) {
 		let prevProps = this.props;
 		let prevState = this.state;
-
 		let hasStateChanged = (
 			prevState.x                 !== nextState.x              ||
 			prevState.y                 !== nextState.y              ||
-			prevState.showEditDialog    !== nextState.showEditDialog
+			prevState.showEditDialog    !== nextState.showEditDialog ||
+			prevState.locked            !== nextState.locked
 		);
 
 		let havePropsChanged = (
@@ -64,7 +66,14 @@ export default React.createClass({
 		this.hammer = doubletap(this.getDOMNode());
 		this.hammer.on('doubletap', this.toggleEditDialog);
 
+		this.draggable.on('dragStart', (a,b) => {
+			console.log('start');
+			socket.emit('ticket:edit:start', {board: this.props.board, ticket:this.props.ticket.id});
+		});
+
 		this.draggable.on('dragEnd', () => {
+			console.log('end');
+			socket.emit('ticket:edit:end', {board: this.props.board, ticket:this.props.ticket.id});
 			if(this.draggable && !this.props.ticket.id.startsWith('dirty_')) {
 				let position = this.draggable.position;
 
@@ -108,7 +117,7 @@ export default React.createClass({
 	},
 
 	toggleEditDialog() {
-		if(!this.props.ticket.id.startsWith('dirty_')) {
+		if(!this.props.ticket.id.startsWith('dirty_') && !this.props.ticket.locked) {
 			this.setState({ showEditDialog: !this.state.showEditDialog });
 		}
 	},
@@ -135,6 +144,13 @@ export default React.createClass({
 				backgroundColor: this.props.ticket.color
 			}
 		}
+
+		if(this.props.ticket.locked){
+			style.ticket.background = '#FF8888';
+		}else{
+			style.ticket.background = undefined;
+		}
+
 		let editTicketDialog = !this.state.showEditDialog ? null : (
 			<EditTicketDialog board={this.props.board}
 				ticket={this.props.ticket}

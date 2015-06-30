@@ -84,6 +84,14 @@ export default flux.actionCreator({
 		});
 	},
 
+	lock(board, ticket){
+		this.dispatch(Action.Ticket.Edit, {board, ticket: ticket });
+	},
+
+	unlock(board, ticket){
+		this.dispatch(Action.Ticket.Edit, {board, ticket: ticket });
+	},
+
 	/**
 	 * Update the given ticket, persisting the changes to the server.
 	 */

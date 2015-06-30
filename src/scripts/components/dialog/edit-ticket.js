@@ -11,6 +11,8 @@ import UserStore    from '../../stores/user';
 import Dialog      from '../../components/dialog';
 import ColorSelect from '../../components/color-select';
 
+import socket	from '../../utils/socket';
+
 /**
  *
  */
@@ -78,6 +80,13 @@ export default React.createClass({
             event.target instanceof HTMLAnchorElement ||
             this.state.content === '')  {
             return;
+		}
+
+		if(!this.state.isEditing) {
+			socket.emit('ticket:edit:start', {board: this.props.board, ticket:this.props.ticket.id});
+		}else
+		{
+			socket.emit('ticket:edit:end', {board: this.props.board, ticket:this.props.ticket.id});
 		}
 
 		this.setState({ isEditing: !this.state.isEditing });

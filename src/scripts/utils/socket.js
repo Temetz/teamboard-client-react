@@ -10,7 +10,8 @@ import UserAction      from '../actions/user';
 
 export default {
 	connect:    connect,
-	disconnect: disconnect
+	disconnect: disconnect,
+	emit: emit
 }
 
 const IO_URL        = process.env.IO_URL || 'http://localhost:9001';
@@ -101,6 +102,10 @@ function disconnect() {
 	});
 }
 
+
+function emit(event, payload){
+	socket.emit(event, payload);
+}
 /**
  * Each board represents a 'room', as far as the socket connection cares. When
  * the state of the 'BoardStore' changs, we make sure to sync our room status
@@ -142,7 +147,9 @@ const Event = {
 	Ticket: {
 		Create: 'TICKET_CREATE',
 		Update: 'TICKET_EDIT',
-		Delete: 'TICKET_REMOVE'
+		Delete: 'TICKET_REMOVE',
+		EditStart: 'TICKET_EDIT_START',
+		EditEnd: 'TICKET_EDIT_END'
 	}
 }
 
@@ -187,6 +194,12 @@ const PayloadHandler = {
 		}
 		let ticket = payload.data;
 		return TicketAction.remove(board, ticket);
+	},
+	[Event.Ticket.EditStart](payload) {
+		return TicketAction.lock(payload.board, payload.ticket);
+	},
+	[Event.Ticket.EditEnd](payload) {
+		return TicketAction.unlock(payload.board, payload.ticket);
 	}
 }
 

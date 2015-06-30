@@ -36,6 +36,8 @@ export default flux.actions({
 		Add:    null,
 		Load:   null,
 		Edit:   null,
-		Remove: null
+		Remove: null,
+		Lock:   null,
+		Unlock: null
 	}
 });
